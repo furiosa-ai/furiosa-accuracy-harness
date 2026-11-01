@@ -88,7 +88,7 @@ async def _run(a):
     benches = _bench_list(a.bench)
     _set_window(benches, a.lcb_window)
     params, is_chat = _params(a)
-    client = Client(a.model, base_url=a.base_url, concurrency=a.concurrency, params=params)
+    client = Client(a.model, base_url=a.base_url, concurrency=a.concurrency, params=params, stream=not a.no_stream)
     ctx = _served_ctx(client.base_url, client.api_key, a.model)
     if ctx and params.get("max_tokens", 0) > ctx - 4096:
         params["max_tokens"] = client.params["max_tokens"] = max(1024, ctx - 4096)
@@ -186,6 +186,7 @@ def main(argv=None):
     r.add_argument("--no-think", action="store_true", help="chat_template_kwargs.enable_thinking=false (Qwen3, EXAONE)")
     r.add_argument("--param", nargs="*", help="extra request fields k=v (JSON values)")
     r.add_argument("--lcb-window", help="LiveCodeBench contest dates START:END (default 2024-07-01:2025-01-01)")
+    r.add_argument("--no-stream", action="store_true", help="plain (non-streamed) requests")
     r.add_argument("--force", action="store_true", help="reuse a result folder even if the request params changed")
     r.add_argument("--results", default=os.path.join(ROOT, "results"))
     s = sub.add_parser("score", help="re-score saved responses (e.g. after an extractor fix)")

@@ -1,7 +1,8 @@
 """Answer extraction from free-form model output."""
 import re
 
-_ANSWER = re.compile(r"(?i)answer\s*(?:is)?\s*[:：]\s*[\*\s]*\(?\s*([A-J])\s*\)?(?![A-Za-z])")
+# 'Answer: X' with markdown / LaTeX wrapping: **D**, (D), $D$, $\boxed{D}$, \text{D}, \textbf{D}
+_ANSWER = re.compile(r"(?i)answer\s*(?:is)?\s*[:：]\s*(?:[\*\s\$\(]|\\\(|\\boxed\{|\\text(?:bf)?\{|\\mathrm\{)*([A-J])(?![A-Za-z])")
 _BOXED_LETTER = re.compile(r"\\boxed\{\s*(?:\\text\{)?\s*\(?([A-J])\)?\s*\}?\s*\}")
 
 
