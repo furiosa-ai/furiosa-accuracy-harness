@@ -47,9 +47,12 @@ class Client:
         body = {k: v for k, v in body.items() if v is not None}
         if self.stream:
             body.update(stream=True, stream_options={"include_usage": True})
-        last = None
+        last, long_fails = None, 0
         async with self.sem:
             for attempt in range(self.max_retries):
+                if long_fails >= 2:
+                    # the same long reply was cut twice after minutes: a proxy/gateway request timeout, not a blip.
+                    return dict(error=f"cut twice after a long generation (gateway request timeout?): {last}")
                 t0 = time.time()
                 try:
                     if self.stream:
@@ -61,6 +64,7 @@ class Client:
                     last = res["retry"]
                 except (httpx.TransportError, httpx.TimeoutException, ValueError, KeyError) as e:
                     last = f"{type(e).__name__}: {e} after {time.time() - t0:.0f} s"
+                long_fails += time.time() - t0 > 120
                 await asyncio.sleep(min(60, 2 ** attempt + random.random()))
         return dict(error=f"gave up after {self.max_retries} attempts: {last}")
 

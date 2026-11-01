@@ -31,7 +31,9 @@ ANSWER = "### Answer: (use the provided format with backticks)\n\n"
 
 PRELUDE = ("import sys, os, math, re, string, random, bisect, heapq, functools, itertools, collections, operator, copy\n"
            "from typing import *\nfrom collections import *\nfrom itertools import *\nfrom functools import *\n"
-           "from heapq import *\nfrom bisect import *\nfrom math import *\nsys.setrecursionlimit(1 << 20)\n")
+           "from heapq import *\nfrom bisect import *\nfrom math import *\n"
+           "from builtins import *  # last, as LiveCodeBench does: math's star import must not shadow pow/sum/etc.\n"
+           "sys.setrecursionlimit(1 << 20)\n")
 
 CACHE = os.path.expanduser("~/.cache/fah")
 FILES = ("test4.jsonl", "test5.jsonl")

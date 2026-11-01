@@ -55,6 +55,16 @@ $F report                                                    # table + results/l
 Cost: reasoning models write 2–20K tokens per item. On gpt-oss-120b at high effort, one request runs at ~65 tok/s, so a
 full MMLU-Pro (12K items) is many hours; `--limits mmlu_pro=2000` is the practical default for a sweep.
 
+## All models of the public endpoint
+
+```bash
+bash scripts/run-endpoint-models.sh      # gpt-oss-120b, Qwen3-32B, Qwen3-VL-32B, Gemma-4-31B in parallel tmux sessions
+```
+
+The public endpoint's gateway must allow long requests: a reasoning reply of 15–30K tokens runs past 5 minutes, and a gateway
+that cuts requests at 300 s turns those items into errors (scored wrong). The client streams, retries transient failures,
+and stops retrying an item that was cut twice after a long generation; `summary.json` counts such errors per bench.
+
 ## Output
 
 `results/<model>/<tag>/`: `meta.json` (endpoint, params, limits, repeats, seed), `<bench>.responses.jsonl` (raw replies
