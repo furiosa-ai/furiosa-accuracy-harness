@@ -72,6 +72,12 @@ with reasoning, usage, latency), `<bench>.scored.jsonl` (extracted answer, corre
 aggregate, truncation and error counts, mean completion tokens, `index`, `index_complete`). An index is marked
 complete when all five benches ran the standard suite (or the full sets) with seed 0.
 
+## Published scores to check against
+
+`refs/README.md` lists every publicly reported score for the RNGD model zoo on the five benchmarks (model cards, tech
+reports, Artificial Analysis, MathArena, Open LLM Leaderboard), marks which ones match this harness's settings, and gives
+the run flags per model and mode. Raw rows with source URLs: `refs/published_scores.jsonl`.
+
 ## Safety of the code benchmark
 
 LiveCodeBench runs model-written Python. Each test runs as `python -I` in a fresh temporary folder, with CPU-time and
