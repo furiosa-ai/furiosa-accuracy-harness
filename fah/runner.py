@@ -13,6 +13,8 @@ import os
 import time
 
 HEADLINE = ["mmlu_pro", "gpqa_diamond", "ifeval", "livecodebench", "aime_2025"]
+# The standard suite: MMLU-Pro on a stratified 2,000 of its 12,032 questions (seed 0, ~±1 pt), everything else full.
+STANDARD_LIMITS = {"mmlu_pro": 2000}
 
 
 def slug(model):
@@ -106,7 +108,8 @@ def summarise(outdir, results, meta):
              index=round(sum(head.values()) / len(head), 2) if head else None,
              index_complete=len(head) == len(HEADLINE) and all(benches[b].get("n") == benches[b].get("items") *
                                                                meta["repeats"].get(b, 1) for b in head)
-                                and not any((meta.get("limits") or {}).get(b) for b in head),
+                                and all((meta.get("limits") or {}).get(b) in (None, STANDARD_LIMITS.get(b))
+                                        for b in head) and meta.get("seed", 0) == 0,
              headline={b: round(v, 2) for b, v in head.items()}, benches=benches)
     json.dump(s, open(path, "w"), indent=1)
     return s

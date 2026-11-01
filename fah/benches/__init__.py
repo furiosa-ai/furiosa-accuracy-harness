@@ -14,7 +14,8 @@ def hf_file(repo, filename, revision=None):
 
 
 def subsample(items, limit, seed, key=None):
-    """Deterministic subsample; stratified by key (round-robin over strata) so small limits keep the category mix."""
+    """Deterministic subsample. With key, stratified in proportion to each stratum's share of the full set (largest
+    remainder), so the sample's micro-average estimates the full-set score and small limits keep the category mix."""
     if not limit or limit >= len(items):
         return items
     rng = random.Random(seed)
@@ -23,15 +24,15 @@ def subsample(items, limit, seed, key=None):
     strata = {}
     for it in items:
         strata.setdefault(key(it), []).append(it)
-    for v in strata.values():
-        rng.shuffle(v)
-    out, i = [], 0
     keys = sorted(strata)
-    while len(out) < limit:
-        for k in keys:
-            if i < len(strata[k]) and len(out) < limit:
-                out.append(strata[k][i])
-        i += 1
+    quota = {k: limit * len(strata[k]) / len(items) for k in keys}
+    take = {k: int(quota[k]) for k in keys}
+    for k in sorted(keys, key=lambda k: quota[k] - take[k], reverse=True)[: limit - sum(take.values())]:
+        take[k] += 1
+    out = []
+    for k in keys:
+        v = sorted(strata[k], key=lambda x: str(x["id"]))
+        out += rng.sample(v, take[k])
     return out
 
 

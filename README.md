@@ -6,7 +6,7 @@ scored locally. The **Furiosa Accuracy Index** is the plain mean of the five hea
 
 | Bench | Data | Items | Prompt | Headline score |
 |---|---|---|---|---|
-| `mmlu_pro` | TIGER-Lab/MMLU-Pro test | 12,032 (14 subjects, ≤10 options) | zero-shot CoT, `Answer: X` | accuracy |
+| `mmlu_pro` | TIGER-Lab/MMLU-Pro test | 2,000 stratified of 12,032 (14 subjects, ≤10 options; `--full` for all) | zero-shot CoT, `Answer: X` | accuracy |
 | `gpqa_diamond` | Idavidrein/gpqa diamond (gated) | 198 (4 options, order fixed per question) | zero-shot CoT, `Answer: X` | accuracy |
 | `ifeval` | google/IFEval | 541 | the prompt as is | prompt-level strict (loose and instruction-level also saved) |
 | `livecodebench` | livecodebench/code_generation_lite, contests 2024-07-01..2025-01-01 | 260 | LiveCodeBench repo prompts | pass@1 on public + private tests |
@@ -38,8 +38,8 @@ in `~/.cache/fah/`.
 F="uv run fah"
 $F models                                                    # what the endpoint serves
 $F run --model furiosa-ai/gpt-oss-120b --limit 5 --tag smoke # quick check: 5 items per bench
-$F run --model furiosa-ai/gpt-oss-120b                       # full suite -> results/furiosa-ai__gpt-oss-120b/full/
-$F run --model furiosa-ai/Qwen3-32B-FP8 --limits mmlu_pro=2000   # MMLU-Pro on a stratified 2,000 (±~1 pt), rest full
+$F run --model furiosa-ai/gpt-oss-120b                       # standard suite -> results/furiosa-ai__gpt-oss-120b/std/
+$F run --model furiosa-ai/gpt-oss-120b --full                # MMLU-Pro on all 12,032 too -> .../full/
 $F report                                                    # table + results/leaderboard.csv
 ```
 
@@ -53,7 +53,7 @@ $F report                                                    # table + results/l
 - **Load:** `--concurrency 16` by default. The public endpoint is shared, so keep it modest.
 
 Cost: reasoning models write 2–20K tokens per item. On gpt-oss-120b at high effort, one request runs at ~65 tok/s, so a
-full MMLU-Pro (12K items) is many hours; `--limits mmlu_pro=2000` is the practical default for a sweep.
+full MMLU-Pro (12K items) takes more than a day, so the standard suite asks a stratified 2,000 (seed 0, ~±1 pt).
 
 ## All models of the public endpoint
 
@@ -70,7 +70,7 @@ and stops retrying an item that was cut twice after a long generation; `summary.
 `results/<model>/<tag>/`: `meta.json` (endpoint, params, limits, repeats, seed), `<bench>.responses.jsonl` (raw replies
 with reasoning, usage, latency), `<bench>.scored.jsonl` (extracted answer, correctness), `summary.json` (per-bench
 aggregate, truncation and error counts, mean completion tokens, `index`, `index_complete`). An index is marked
-complete only when all five benches ran on their full sets.
+complete when all five benches ran the standard suite (or the full sets) with seed 0.
 
 ## Safety of the code benchmark
 

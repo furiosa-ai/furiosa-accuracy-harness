@@ -12,7 +12,7 @@ import httpx
 from .benches import registry
 from .client import Client, load_dotenv
 from .profiles import profile_for
-from .runner import HEADLINE, ask, score, slug, summarise
+from .runner import HEADLINE, STANDARD_LIMITS, ask, score, slug, summarise
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(ROOT, ".env"))
@@ -65,7 +65,7 @@ def _params(a):
 
 
 def _outdir(a):
-    tag = a.tag or ("full" if not (a.limit or a.limits) else "partial")
+    tag = a.tag or ("partial" if (a.limit or a.limits) else "full" if a.full else "std")
     d = os.path.join(a.results, slug(a.model), tag)
     os.makedirs(d, exist_ok=True)
     return d, tag
@@ -94,7 +94,8 @@ async def _run(a):
         params["max_tokens"] = client.params["max_tokens"] = max(1024, ctx - 4096)
     outdir, tag = _outdir(a)
     reps = _repeats(a, benches)
-    lim = {b.name: _kv(a.limits).get(b.name, a.limit) for b in benches}
+    base = {} if (a.full or a.limit) else STANDARD_LIMITS
+    lim = {b.name: _kv(a.limits).get(b.name, a.limit or base.get(b.name)) for b in benches}
     meta = dict(model=a.model, tag=tag, base_url=client.base_url, served_max_model_len=ctx, params=params,
                 limit=a.limit, limits=lim, seed=a.seed, repeats=reps, lcb_window=a.lcb_window or "2024-07-01:2025-01-01",
                 started=time.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -174,10 +175,11 @@ def main(argv=None):
     r.add_argument("--model", required=True)
     r.add_argument("--bench", default="all", help="all or a comma list of " + ",".join(HEADLINE))
     r.add_argument("--limit", type=int, help="items per bench (stratified, deterministic); omit for the full set")
+    r.add_argument("--full", action="store_true", help="every item (MMLU-Pro all 12,032) instead of the standard suite")
     r.add_argument("--limits", nargs="*", help="per-bench item limits bench=N (override --limit), e.g. mmlu_pro=2000")
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--repeats", nargs="*", help="bench=k, e.g. aime_2025=8")
-    r.add_argument("--tag", help="result folder name (default full / limit<N>)")
+    r.add_argument("--tag", help="result folder name (default std, full with --full, partial with --limit/--limits)")
     r.add_argument("--concurrency", type=int, default=16)
     r.add_argument("--base-url")
     r.add_argument("--temperature", type=float)
